@@ -17,6 +17,8 @@ jobs:
   fast_finish: true
   allow_failures:
     - julia: nightly
+env:
+  - CODECOV_TOKEN='b3f05456-9386-4aed-a05e-38f7765e397c'
 after_success:
   - |
     julia -e '
