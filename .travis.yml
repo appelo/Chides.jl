@@ -3,7 +3,7 @@ language: julia
 notifications:
   email: false
 julia:
-  - 1.5
+  - 1.0
 os:
   - linux
 arch:
@@ -17,19 +17,19 @@ jobs:
     - julia: nightly
 env:
   - CODECOV_TOKEN='b3f05456-9386-4aed-a05e-38f7765e397c'
-sudo: required
-before_install:
-  - echo starting;
-    sudo apt-get install gfortran;
-    pwd;
-    ls ;
-    cd src/chides_fortran;
-    make;
-    echo done;
-#after_success:
-#  - |
-#    julia -e '
-#      using Pkg
-#      Pkg.add("Coverage")
-#      using Coverage
-#      Codecov.submit(process_folder())'
+#sudo: required
+#before_install:
+#  - echo starting;
+#    sudo apt-get install gfortran;
+#    pwd;
+#    ls ;
+#    cd src/chides_fortran;
+#    make;
+#    echo done;
+after_success:
+  - |
+    julia -e '
+      using Pkg
+      Pkg.add("Coverage")
+      using Coverage
+      Codecov.submit(process_folder())'
