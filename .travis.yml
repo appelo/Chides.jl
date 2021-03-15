@@ -20,8 +20,10 @@ env:
 sudo: required
 before_script:
   - echo starting;
-    echo pwd;
-    echo ls;
+    sudo apt-get install gfortran;
+    echo $PWD;
+    cd src/chides_fortran;
+    echo $PWD;
     echo done;
 after_success:
   - |
@@ -30,6 +32,6 @@ after_success:
       Pkg.add("Coverage")
       using Coverage
       Codecov.submit(process_folder())'
-#    sudo apt-get install gfortran;
+#    
 #    make;
 #    cd src/chides_fortran;
