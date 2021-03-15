@@ -25,6 +25,7 @@ before_script:
     cd src/chides_fortran;
     echo $PWD;
     make;
+    cp ../libchides.so ../../test/;
     echo done;
 after_success:
   - |

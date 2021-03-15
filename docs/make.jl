@@ -9,7 +9,7 @@ makedocs(
         prettyurls = get(ENV, "CI", nothing) == "true"
     ),
     #format = Documenter.LaTeX(platform = "docker"), # errors with no such file or directory???
-    #clean = false,
+   #clean = false,
     sitename="Chides.jl",
     authors = "Daniel Appelo, Thomas Hagstrom, and contributors.",
     pages = [

@@ -6,7 +6,7 @@ function test_hmap(m)
     xr = 1.0
     xc = 0.0
     icase = 0
-    # Chides.hermitemap!(Hmat,m,xl,xr,xc,icase)
-    # return isapprox(Hmat,[[0.5,-1.0] [0.5,1.0]])
-    return true
+    hermitemap!(Hmat,m,xl,xr,xc,icase)
+    return isapprox(Hmat,[[0.5,-1.0] [0.5,1.0]])
+    # return true
 end
