@@ -1,3 +1,4 @@
+push!(LOAD_PATH,"../src/")
 using Chides
 using Test
 
