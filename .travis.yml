@@ -20,8 +20,11 @@ jobs:
 env:
   - CODECOV_TOKEN='b3f05456-9386-4aed-a05e-38f7765e397c'
 before_install:
-  cd src/chides_fortran
-  make
+  - echo starting;
+    pwd;
+    ls ;
+    cd src/chides_fortran;
+    make;
 after_success:
   - |
     julia -e '
