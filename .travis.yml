@@ -25,10 +25,11 @@ before_install:
     ls ;
     cd src/chides_fortran;
     make;
-after_success:
-  - |
-    julia -e '
-      using Pkg
-      Pkg.add("Coverage")
-      using Coverage
-      Codecov.submit(process_folder())'
+    echo done;
+#after_success:
+#  - |
+#    julia -e '
+#      using Pkg
+#      Pkg.add("Coverage")
+#      using Coverage
+#      Codecov.submit(process_folder())'
