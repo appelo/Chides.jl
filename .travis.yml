@@ -24,6 +24,7 @@ before_script:
     echo $PWD;
     cd src/chides_fortran;
     echo $PWD;
+    make;
     echo done;
 after_success:
   - |
