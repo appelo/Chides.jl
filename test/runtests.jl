@@ -1,7 +1,9 @@
 using Chides
 using Test
 
+include("test_hmap.jl")
+
 @testset "Chides.jl" begin
     # Write your tests here.
-    @test welcome(1) == "Welcome to CHIDES"
+    @test test_hmap(0)==true
 end
