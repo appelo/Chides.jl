@@ -3,7 +3,7 @@ language: julia
 notifications:
   email: false
 julia:
-  - 1.0
+  - 1.5
 os:
   - linux
 arch:
@@ -19,13 +19,9 @@ env:
   - CODECOV_TOKEN='b3f05456-9386-4aed-a05e-38f7765e397c'
 sudo: required
 before_script:
-  - echo starting;
-    sudo apt-get install gfortran;
-    echo $PWD;
+  - sudo apt-get install gfortran;
     cd src/chides_fortran;
-    echo $PWD;
     make;
-    cp ../libchides.so ../../test/;
     echo done;
 after_success:
   - |
@@ -34,6 +30,4 @@ after_success:
       Pkg.add("Coverage")
       using Coverage
       Codecov.submit(process_folder())'
-#    
-#    make;
-#    cd src/chides_fortran;
+

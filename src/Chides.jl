@@ -1,6 +1,6 @@
 module Chides
 
-# Write your package code here.
+const fortran_lib_str = Base.Filesystem.dirname(pathof(@__MODULE__)) * "/libchides.so"
 
 """
  hermitemap!(hmap::Array{Float64,2}, m::Int64, xl::Float64, xr::Float64, xc::Float64, icase::Int64=0)
@@ -23,9 +23,9 @@ This subroutine computes the coefficient matrix tmat which transfers derivative 
 - `icase::Int64=0`: Interpolation case, left, interior or right
 """
 function hermitemap!(hmap::Array{Float64,2}, m::Int64, xl::Float64, xr::Float64, xc::Float64, icase::Int64=0)
-    
-    ccall((:hermite_, "./libchides.so"), Cvoid, (Ref{Int64},Ref{Float64},Ref{Float64},Ref{Float64},Ref{Float64},Ref{Int64}), Ref(m),Ref(xl),Ref(xr),Ref(xc),hmap,Ref(icase))
-    return nothing
+
+    ccall((:hermite_, fortran_lib_str ), Cvoid, (Ref{Int64},Ref{Float64},Ref{Float64},Ref{Float64},Ref{Float64},Ref{Int64}), Ref(m),Ref(xl),Ref(xr),Ref(xc),hmap,Ref(icase))
+           
 end
 
 export hermitemap!
