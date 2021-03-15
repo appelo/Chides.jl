@@ -17,15 +17,15 @@ jobs:
     - julia: nightly
 env:
   - CODECOV_TOKEN='b3f05456-9386-4aed-a05e-38f7765e397c'
-#sudo: required
-#before_install:
-#  - echo starting;
+sudo: required
+before_script:
+  - echo starting;
 #    sudo apt-get install gfortran;
-#    pwd;
-#    ls ;
-#    cd src/chides_fortran;
+    echo pwd;
+    echo ls;
+    cd src/chides_fortran;
 #    make;
-#    echo done;
+    echo done;
 after_success:
   - |
     julia -e '
