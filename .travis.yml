@@ -3,9 +3,7 @@ language: julia
 notifications:
   email: false
 julia:
-  - 1.0
   - 1.5
-  - nightly
 os:
   - linux
 arch:
@@ -19,8 +17,10 @@ jobs:
     - julia: nightly
 env:
   - CODECOV_TOKEN='b3f05456-9386-4aed-a05e-38f7765e397c'
+sudo: required
 before_install:
   - echo starting;
+    sudo apt-get install gfortran;
     pwd;
     ls ;
     cd src/chides_fortran;
