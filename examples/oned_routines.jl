@@ -18,16 +18,6 @@ end
 
 function interpolate_to_dual1d3!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
   m = size(ud,1)-1
-  ucof = @SArray zeros(2*m+2)
-  for i = 1:size(ud,2)
-    taylor_to_hermite1d1!(ucof,view(up,1:m+1,i:i+1),Hmat,m)
-    ud[1:m+1,i] .= ucof[1:m+1]
-  end
-end
-
-
-function interpolate_to_dual1d4!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
-  m = size(ud,1)-1
   ucof = zeros(Float64,2*m+2)
   for i = 1:size(ud,2)
     taylor_to_hermite1d2!(ucof,up[1:m+1,i:i+1],Hmat,m)
@@ -35,7 +25,7 @@ function interpolate_to_dual1d4!(ud::Array{Float64,2},up::Array{Float64,2},Hmat:
   end
 end
 
-function interpolate_to_dual1d5!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
+function interpolate_to_dual1d4!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
   m = size(ud,1)-1
   ucof = zeros(Float64,2*m+2)
   for i = 1:size(ud,2)
@@ -44,16 +34,8 @@ function interpolate_to_dual1d5!(ud::Array{Float64,2},up::Array{Float64,2},Hmat:
   end
 end
 
-function interpolate_to_dual1d6!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
-  m = size(ud,1)-1
-  ucof = @SArray zeros(2*m+2)
-  for i = 1:size(ud,2)
-    taylor_to_hermite1d2!(ucof,view(up,1:m+1,i:i+1),Hmat,m)
-    ud[1:m+1,i] .= ucof[1:m+1]
-  end
-end
 
-function interpolate_to_dual1d7!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
+function interpolate_to_dual1d5!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
   m = size(ud,1)-1
   ucof = zeros(Float64,2*m+2)
   for i = 1:size(ud,2)
@@ -62,7 +44,7 @@ function interpolate_to_dual1d7!(ud::Array{Float64,2},up::Array{Float64,2},Hmat:
   end
 end
 
-function interpolate_to_dual1d8!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
+function interpolate_to_dual1d6!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
   m = size(ud,1)-1
   ucof = zeros(Float64,2*m+2)
   for i = 1:size(ud,2)
@@ -71,7 +53,7 @@ function interpolate_to_dual1d8!(ud::Array{Float64,2},up::Array{Float64,2},Hmat:
   end
 end
 
-function interpolate_to_dual1d10!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
+function interpolate_to_dual1d7!(ud::Array{Float64,2},up::Array{Float64,2},Hmat::Array{Float64,2})
   m = size(ud,1)-1
   ucof = zeros(Float64,2*m+2)
   for i = 1:size(ud,2)
