@@ -1,18 +1,20 @@
-#push!(LOAD_PATH,"../")
 using Chides
-using BenchmarkTools
 using Plots
 using TaylorSeries
+using LinearAlgebra
 pyplot()
 
-include("apa.jl")
+include("chides_sim_1d_scalar.jl")
 
 function setinitialdata!(u,x,m,h)
     # Use a Taylor seris + AD to compute the
     # initial data
-    affine(a) = a + Taylor1(typeof(a),m+3)
+    affine(a) = a + Taylor1(typeof(a),2*m+4)
     #
-    idfun(x) = sin(pi*x)
+
+    #idfun(x) = sin(pi*x)
+    idfun(x) = exp(-36*x^2)
+
     for j = 1:length(x)
         xidat = affine(x[j])
         Uidat = idfun(xidat)
@@ -25,103 +27,70 @@ function setinitialdata!(u,x,m,h)
     end
 end
 
-function evolvep2d!(ud::Array{Float64,2},up::Array{Float64,2},utaylor::Array{Float64,2},uhinterp::Array{Float64,1},
-    Hmat::Array{Float64,2},m::Int64,nx::Int64)
-
-    # Periodic BC
-    utaylor[1:m+1,1] .= view(up,1:m+1,nx-1)
-    utaylor[1:m+1,2] .= view(up,1:m+1,1)
-    taylor_to_hermite1d!(view(uhinterp,1:2*m+2),view(utaylor,1:m+1,1:2),Hmat,m)
-    ud[1:m+1,1] .= view(uhinterp,1:m+1)
-    for i = 1:nx-1
-        taylor_to_hermite1d!(view(uhinterp,1:2*m+2),view(up,1:m+1,i:i+1),Hmat,m)
-        ud[1:m+1,i+1] .= view(uhinterp,1:m+1)
+function pdeupdate!(uhinterp::Array{Float64,1},uspacetime::Array{Float64,2},sim)
+    m = sim.m
+    q = sim.q
+    uspacetime[1:2*m+2,1] .= uhinterp
+    cflx  = sim.dt/sim.h
+    for idt=1:q
+        for idx=0:2*m+1-idt
+            uspacetime[1+idx,1+idt] = cflx/idt*(idx+1)*uspacetime[1+idx+1,1+idt-1]
+        end
     end
-    # # Periodic BC
-    utaylor[1:m+1,1] .= view(up,1:m+1,nx)
-    utaylor[1:m+1,2] .= view(up,1:m+1,2)
-    taylor_to_hermite1d!(view(uhinterp,1:2*m+2),view(utaylor,1:m+1,1:2),Hmat,m)
-    ud[1:m+1,nx+1] .= view(uhinterp,1:m+1)
-    return nothing
+    # Add up the Taylor series for the function and m first derivatives
+    # at the next half step.
+    dfact = 1.0
+    for l=1:q
+        dfact *= 0.5
+        for i = 1:m+1
+            uhinterp[i] += dfact*uspacetime[i,1+l]
+        end
+    end
 end
 
-function evolved2p!(up::Array{Float64,2},ud::Array{Float64,2},utaylor::Array{Float64,2},uhinterp::Array{Float64,1},
-    Hmat::Array{Float64,2},m::Int64,nx::Int64)
-
-    for i = 1:nx
-        taylor_to_hermite1d!(view(uhinterp,1:2*m+2),view(ud,1:m+1,i:i+1),Hmat,m)
-        #taylor_to_hermite1d!(uhinterp,up[1:m+1,i:i+1],Hmat,m)
-        ud[1:m+1,i+1] .= view(uhinterp,1:m+1)
-    end
-    return nothing
-end
-
-
-
-
-function main()
-    # Tests for one dimensional arrays
-    # Array sizes
-
-    nx = 101
+function main(nx,m)
+#    nx = 11
+#    m = 3
     XL = -1.0
     XR = 1.0
-    m = 5
     TEND = 10.0
-    CFL = 0.8
+    CFL = 0.95
 
-    t_sim = apa.Chides_simulation_1D(m,nx,XL,XR,TEND,CFL)
-
-    # # Set up a primal and a dual grid
-    # x = LinRange(XL,XR,nx)
-    # h = x[2]-x[1]
-    #
-    # # Hermite interpolation matrix
-    # Hmat = zeros(Float64,2*(m+1),2*(m+1))
-    # xl = -1.0
-    # xr = 1.0
-    # xc = 0.0
-    # icase = 0
-    # hermitemap!(Hmat,m,xl,xr,xc,icase)
-    #
-    # # Local grid functions
-    # uhermite = zeros(Float64,2*(m+1))
-    # utaylor = rand(Float64,m+1,2)
-    #
-    # # Global grid functions
-    # # Think of grid indices x_i i = 0,...,nx
-    # up = zeros(Float64,m+1,nx)
-    # ud = zeros(Float64,m+1,nx+1)
-
-
+    t_sim = sim.Chides_simulation_1D(m,nx,XL,XR,TEND,CFL)
     setinitialdata!(t_sim.up,t_sim.xp,t_sim.m,t_sim.h)
 
+    nref = 25
+    uplot = zeros((nx-1)*nref+1)
+    xplot = LinRange(XL,XR,(nx-1)*nref+1)
 
+    uex = zeros((nx-1)*nref+1)
+    primal2plot1d!(uex,t_sim.up,t_sim.Hmat,nref)
 
-#    @code_warntype evolvep2d!(t_sim.ud,t_sim.up,t_sim.utaylor,t_sim.uhinterp,t_sim.Hmat,t_sim.m,t_sim.nx)
-
-    # @btime evolvep2d!(t_sim.ud,t_sim.up,t_sim.utaylor,t_sim.uhinterp,t_sim.Hmat,t_sim.m,t_sim.nx)
-
-    #ud = copy(t_sim.ud)
-    #up = copy(t_sim.up)
-    #utaylor = copy(t_sim.utaylor)
-    #uhinterp = copy(t_sim.uhinterp)
-    #Hmat = copy(t_sim.Hmat)
-
-    # @code_warntype evolvep2d!(ud,up,utaylor,uhinterp,Hmat,m,nx)
-
-    for i = 1:500
-        #evolvep2d!(ud,up,utaylor,uhinterp,Hmat,m,nx)
-        evolvep2d!(t_sim.ud,t_sim.up,t_sim.utaylor,t_sim.uhinterp,t_sim.Hmat,t_sim.m,t_sim.nx)
-        evolvep2d!(t_sim.up,t_sim.ud,t_sim.utaylor,t_sim.uhinterp,t_sim.Hmat,t_sim.m,t_sim.nx)
+    anim = @animate for it = 1:t_sim.nt
+        evolvep2d_1d_scalar!(t_sim.ud,t_sim.up,t_sim.utaylor,t_sim.uhinterp,t_sim.Hmat,t_sim.m,t_sim.nx,t_sim)
+        evolved2p_1d_scalar!(t_sim.up,t_sim.ud,t_sim.utaylor,t_sim.uhinterp,t_sim.Hmat,t_sim.m,t_sim.nx,t_sim)
+        if mod(it,1) == 0
+             primal2plot1d!(uplot,t_sim.up,t_sim.Hmat,nref)
+             plot(xplot,uplot,xlims=(XL,XR),ylims=(-0.1, 1.1))
+        end
     end
+    gif(anim, string(@__DIR__,"/transport_solution.gif"), fps = 6)
+    primal2plot1d!(uplot,t_sim.up,t_sim.Hmat,nref)
+    return maximum(abs.(uplot.-uex))
 end
 
-using Profile
+m = 5
+nx = 6
+println(main(nx,m))
 
-
-@profile for i in 1:100 main() end
-Juno.profiler()
-Profile.clear()
-
-#@code_warntype evolvep2d!(ud,up,utaylor,uhinterp,Hmat,m,nx)
+# errors = zeros(6,5)
+# for m = 1:6
+#     for p = 1:5
+#         nx = 2^p+1
+#         err = main(nx,m)
+#         #println([m, nx, err])
+#         errors[m,p] = err
+#     end
+#     println(log2.(errors[m,1:end-1]./errors[m,2:end]))
+#     println("\n")
+# end

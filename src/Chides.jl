@@ -1,5 +1,7 @@
 module Chides
 
+using LinearAlgebra
+
 const fortran_lib_str = Base.Filesystem.dirname(pathof(@__MODULE__)) * "/libchides.so"
 
 """
@@ -39,8 +41,27 @@ function taylor_to_hermite1d!(uhermite,utaylor,Hmat::Array{Float64,2},m::Int64)
   end
 end
 
+function primal2plot1d!(uplot::Array{Float64,1},up::Array{Float64,2},Hmat::Array{Float64,2},nref::Int64)
+
+  m = size(up,1)-1
+  ucof = zeros(Float64,2*m+2)
+  cof2plot = zeros(nref-1,2*m+2)
+  for j = 1:2*m+2
+    for i = 1:nref-1
+      cof2plot[i,j] = (-.5+1.0*i/nref)^(j-1)
+    end
+  end
+  # Should be done in parallel...
+  for i = 1:size(up,2)-1
+    taylor_to_hermite1d!(ucof,view(up,1:m+1,i:i+1),Hmat,m)
+    uplot[1+nref*(i-1)] = up[1,i]
+    mul!(view(uplot,1+nref*(i-1)+1:1+nref*(i-1)+nref-1),cof2plot,ucof)
+  end
+  uplot[end] = up[1,end]
+end
 
 export hermitemap!
 export taylor_to_hermite1d!
+export primal2plot1d!
 
 end
