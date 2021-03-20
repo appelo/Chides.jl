@@ -1,5 +1,4 @@
 push!(LOAD_PATH,"../")
-using Flux
 using Plots
 using Chides
 using TaylorSeries
@@ -7,7 +6,7 @@ pyplot()
 
 function evalhinterp(x,ucof)
 
-    deg_p1 = length(ucof) 
+    deg_p1 = length(ucof)
     u = zeros(size(x))
     z = ones(size(x))
     for d = 0:deg_p1-1
@@ -42,7 +41,7 @@ hermitemap!(Hmat,m,xl,xr,xc,icase)
 affine(a) = a + Taylor1(typeof(a),2*m+3)
 
 
-# 
+#
 tl = affine(xl)
 tr = affine(xr)
 
