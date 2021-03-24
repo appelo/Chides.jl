@@ -60,8 +60,57 @@ function primal2plot1d!(uplot::Array{Float64,1},up::Array{Float64,2},Hmat::Array
   uplot[end] = up[1,end]
 end
 
+function primal2plot2d!(uplot::Array{Float64,2},up::Array{Float64,4},Hmat::Array{Float64,2},nref::Int64)
+
+   m = size(up,1)-1
+   nx = size(up,3)
+   ny = size(up,4)
+   udata = zeros(2*m+2)
+   t = zeros(2*m+2,2*m+2)
+   smcofs = zeros(2*m+2,2*m+2)
+   xloc = zeros(nref+1,nref+1)
+   yloc = zeros(nref+1,nref+1)
+   for j = 0:nref
+      for i = 0:nref
+         xloc[1+i,1+j] = (-0.5+i/nref)
+         yloc[1+i,1+j] = (-0.5+j/nref)
+      end
+   end
+   for j = 1:ny-1
+      for i = 1:nx-1
+         U = view(up,1:m+1,1:m+1,i:i+1,j:j+1)
+         for idy = 0:m
+            # First interpolate all y-data at the bottom and top of a cell
+            # to the middle of the bottom and top face.
+            view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,1)
+            view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,1)
+            mul!(view(smcofs,1:2*m+2,1+idy),Hmat,udata)
+            view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,2)
+            view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,2)
+            mul!(view(smcofs,1:2*m+2,m+2+idy),Hmat,udata)
+         end
+         # Then interpolate all data to the middle of the cell
+         for idx = 0:2*m+1
+            view(udata,1:m+1)     .= view(smcofs,1+idx,1:m+1)
+            view(udata,m+2:2*m+2) .= view(smcofs,1+idx,m+2:2*m+2)
+            mul!(view(t,1+idx,1:2*m+2),Hmat,udata)
+         end
+         # This should be improved ...
+         uploc = zeros(nref+1,nref+1)
+         for idy = 0:2*m+1
+            for idx = 0:2*m+1
+               uploc .+= t[1+idx,1+idy].*xloc.^idx.*yloc.^idy
+            end
+         end
+         uplot[1+(i-1)*nref:i*nref+1,1+(j-1)*nref:j*nref+1] .= uploc
+      end
+   end
+end
+
+
 export hermitemap!
 export taylor_to_hermite1d!
 export primal2plot1d!
+export primal2plot2d!
 
 end
