@@ -107,8 +107,15 @@ function primal2plot2d!(uplot::Array{Float64,2},up::Array{Float64,4},Hmat::Array
    end
 end
 
+function extrapolate!(p::Vector{Float64}, z::Float64, q::Int64)
+
+    ccall((:extrapolate_, fortran_lib_str ), Cvoid, (Ref{Float64},Ref{Float64},Ref{Int64}), p,Ref(z),Ref(q))
+
+end
+
 
 export hermitemap!
+export extrapolate!
 export taylor_to_hermite1d!
 export primal2plot1d!
 export primal2plot2d!
