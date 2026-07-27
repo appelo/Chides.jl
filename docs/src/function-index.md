@@ -4,7 +4,7 @@
 Modules = [Chides]
 ```
 
-```@docs
-hermitemap!(hmap::Array{Float64,2}, m::Int64, xl::Float64, xr::Float64, xc::Float64, icase::Int64=0)
+```@autodocs
+Modules = [Chides]
+Order = [:function, :type]
 ```
-
