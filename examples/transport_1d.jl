@@ -2,7 +2,7 @@ using Chides
 using Plots
 using TaylorSeries
 using LinearAlgebra
-pyplot()
+gr()
 
 include("chides_sim_1d_scalar.jl")
 

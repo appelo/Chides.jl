@@ -1,31 +1,25 @@
-push!(LOAD_PATH,"../src/")
-using Documenter, Example, Chides
+using Documenter, Chides
 
-makedocs(sitename="Chides Documentation")
+DocMeta.setdocmeta!(Chides, :DocTestSetup, :(using Chides); recursive = true)
 
 makedocs(
     modules = [Chides],
-    format = Documenter.HTML(
-        prettyurls = get(ENV, "CI", nothing) == "true"
-    ),
-    #format = Documenter.LaTeX(platform = "docker"), # errors with no such file or directory???
-   #clean = false,
-    sitename="Chides.jl",
+    sitename = "Chides.jl",
     authors = "Daniel Appelo, Thomas Hagstrom, and contributors.",
+    format = Documenter.HTML(
+        prettyurls = get(ENV, "CI", "false") == "true",
+        canonical = "https://appelo.github.io/Chides.jl/stable/",
+        edit_link = "master",
+    ),
     pages = [
         "Home" => "index.md",
         "Workflow" => "workflow.md",
         "Examples" => "examples.md",
-        "Types" => "types.md",
-        #"Methods" => "methods.md",
         "Index" => "function-index.md",
     ],
-    doctest = false, # set to true once initial implementation is done
-    source = "src",
 )
 
-#deploydocs(
-#    repo = "github.com/appelo/Chides.jl",
-#    target = "build",
-#    devurl="docs",
-#)
+deploydocs(
+    repo = "github.com/appelo/Chides.jl",
+    devbranch = "master",
+)
