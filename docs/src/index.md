@@ -18,17 +18,12 @@ cd src/chides_fortran
 make
 ```
 
-This produces `libchides.so` and moves it to `src/`, where `Chides` looks for it.
+This produces `libchides.so` and moves it to `src/`, where `Chides` looks for it. The
+makefile supplies the macOS SDK path automatically, so no extra flags are needed there.
 
-On macOS with a Homebrew `gfortran` the link step may fail with
-`ld: library not found for -lSystem`, because the makefile passes no SDK path. In that
-case link manually after `make` has compiled the object files:
-
-```
-gfortran -shared -L"$(xcrun --show-sdk-path)/usr/lib" -o libchides.so \
-    polymul.o polyfuns.o Hermite.o
-mv libchides.so ../
-```
+If the link step nevertheless fails with `ld: library not found for -lSystem`, the
+compiler is looking for an SDK that no longer exists; building with
+`SDKROOT=$(xcrun --show-sdk-path)` in the environment resolves it.
 
 ## Getting started
 
