@@ -1,6 +1,8 @@
 using Chides
 using BenchmarkTools
 
+include("oned_routines.jl")
+
 # Tests for one dimensional arrays
 
 # Array sizes
@@ -47,8 +49,6 @@ println(isapprox(uhermite2,uhermite3))
 println(isapprox(uhermite2,uhermite4))
 println(isapprox(uhermite3,uhermite4))
 
-
-include("oned_routines.jl")
 
 println("\n\nPerformace for 1D interpolation for many points\n\n")
 
