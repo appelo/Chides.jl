@@ -2,14 +2,15 @@ using Plots
 using Chides
 using TaylorSeries
 using BenchmarkTools, Test,LinearAlgebra
-pyplot()
+gr()
 
 function set_initial_data_2d!(up,xp,yp,hx,hy,nx,ny,m)
    # Use a Taylor seris + AD to compute the
    # interpolation data
+   space = JetSpace(order = 3*m+3, variables = ["x", "y"])
    for j = 1:ny
       for i = 1:nx
-         x, y = set_variables("x y", order=3*m+3)
+         x, y = variables(space)
          x = x + xp[i]
          y = y + yp[j]
          xysq = sin(pi*x+1.2)*sin(pi*y+2.3)

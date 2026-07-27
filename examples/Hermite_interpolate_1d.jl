@@ -2,7 +2,7 @@ push!(LOAD_PATH,"../")
 using Plots
 using Chides
 using TaylorSeries
-pyplot()
+gr()
 
 function evalhinterp(x,ucof)
 
