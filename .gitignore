@@ -4,3 +4,11 @@
 /Manifest.toml
 /docs/build/
 /docs/Manifest.toml
+
+# Generated Chapter 2 results and local Fortran build products
+/examples/chapter02/output/
+/examples/chapter04/output/
+/src/libchides.so
+/src/chides_fortran/*.o
+/src/chides_fortran/*.mod
+/examples/chapter08/output/

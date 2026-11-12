@@ -62,14 +62,7 @@ function exact_polynomial(f,m)
     end
     A\rhs
 end
-function reference_step(x,m)
-    setprecision(256) do
-        z=BigFloat(x)
-        numerator=sum((-1)^k*BigFloat(binomial(big(m),k))*z^(2k+1)/(2k+1) for k in 0:m)
-        denominator=sum((-1)^k*BigFloat(binomial(big(m),k))/(2k+1) for k in 0:m)
-        -numerator/denominator
-    end
-end
+include(joinpath(@__DIR__,"../shared/interpolation.jl"))
 function reference_abs(x,m)
     setprecision(256) do
         coefficient=BigFloat(1); value=coefficient; z=BigFloat(x)^2-1
@@ -81,33 +74,16 @@ function reference_abs(x,m)
         value
     end
 end
-function barycentric(x,nodes,values,weights)
-    j=findfirst(==(x),nodes)
-    j!==nothing && return values[j]
-    terms=weights./(x.-nodes)
-    sum(terms.*values)/sum(terms)
-end
-function savecsv(path,header,rows)
-    open(path,"w") do io
-        println(io,join(header,","))
-        for row in rows
-            println(io,join(map(x->x isa AbstractFloat ? @sprintf("%.17g",x) : string(x),row),","))
-        end
-    end
-end
-function output_dir(args=ARGS)
-    index=findfirst(==("--output"),args)
-    directory=index===nothing ? joinpath(@__DIR__,"output") : abspath(args[index+1])
-    mkpath(directory); directory
-end
+include(joinpath(@__DIR__,"../shared/output.jl"))
+output_dir(args=ARGS)=output_directory(args,joinpath(@__DIR__,"output"))
 function metadata(out)
     using_versions=Dict("Chides"=>string(pkgversion(Chides)),"TaylorSeries"=>string(pkgversion(TaylorSeries)))
     if isdefined(@__MODULE__,:Plots)
         using_versions["Plots"]=string(pkgversion(Plots))
     end
     repo=normpath(joinpath(@__DIR__,"../.."))
-    commit=readchomp(`git -C $repo rev-parse HEAD`)
-    dirty=!isempty(readchomp(`git -C $repo status --porcelain`))
+    identity=repository_metadata(repo)
+    commit=identity["chides_commit"]; dirty=identity["working_tree_modified"]
     data=Dict("julia_version"=>string(VERSION),"chides_commit"=>commit,"working_tree_modified"=>dirty,
         "arithmetic"=>"Float64 reconstruction; 256-bit reference arithmetic; exact rational polynomial integration",
         "packages"=>using_versions,"parameters"=>Dict("basis_m"=>3,"step_m"=>[1,5,15],
@@ -119,15 +95,6 @@ function metadata(out)
         "translation_centers"=>[-0.1,0.9,1.4],"translation_widths"=>[0.3,1.25,3.0]))
     open(joinpath(out,"metadata.toml"),"w") do io
         TOML.print(io,data;sorted=true)
-    end
-end
-function loadplots()
-    ENV["GKSwstype"]="100"
-    @eval using Plots
-    @eval begin
-        Plots.gr()
-        Plots.default(fontfamily="Computer Modern", linewidth=2, size=(700,350),
-            guidefontsize=14,tickfontsize=12,legendfontsize=12,titlefontsize=16,margin=5Plots.mm)
     end
 end
 

@@ -1,6 +1,7 @@
 module Chides
 
 using LinearAlgebra
+using TaylorSeries: Taylor1
 
 const fortran_lib_str = Base.Filesystem.dirname(pathof(@__MODULE__)) * "/libchides.so"
 
@@ -34,9 +35,9 @@ This is a wrapper around the Fortran routine `hermite_` in `libchides.so`.
 - `xr::Float64`: location of the right data.
 - `xc::Float64`: center of the interpolant. Ignored unless `icase == 0`.
 - `icase::Int64=0`: collocate at `xl` (`icase < 0`), at an interior `xc` with
-  `xl < xc < xr` (`icase == 0`), or at `xr` (`icase > 0`). In the two boundary cases
-  the leading `(m+1, m+1)` block is the identity, since the data at that end is
-  reproduced exactly.
+  `xl < xc < xr` (`icase == 0`), or at `xr` (`icase > 0`). At the left endpoint the leading
+  `(m+1, m+1)` block is the identity. At the right endpoint the identity is in
+  rows `1:m+1`, columns `m+2:2m+2`, since the right data occupy the second block.
 
 # Examples
 ```jldoctest
@@ -64,7 +65,7 @@ Apply the Hermite map `Hmat` to the scaled Taylor data of two adjacent grid poin
 `utaylor` holds the `m+1` scaled derivatives at the left point in its first column and
 at the right point in its second column. `uhermite` receives the `2m+2` coefficients of
 the interpolating polynomial on the cell, that is `Hmat * [utaylor[:,1]; utaylor[:,2]]`,
-and must have length `2m+2`. Both are overwritten in place.
+and must have length `2m+2`. Only `uhermite` is overwritten; `utaylor` is read-only.
 
 The arguments are deliberately untyped so that `view`s into the larger grid arrays can
 be passed without allocating. This is the inner loop of the solvers, so the product is
@@ -157,6 +158,35 @@ function primal2plot1d!(uplot::Array{Float64,1},up::Array{Float64,2},Hmat::Array
   uplot[end] = up[1,end]
 end
 
+"""
+    taylor_to_hermite2d!(out, data, H, m, buffer, intermediate)
+
+Tensor-product interpolation of four corner coefficient arrays. `data` has
+shape `(m+1,m+1,2,2)` and `out` has shape `(2m+2,2m+2)`. Coefficients use
+`hx^i*hy^j/(i!*j!)` scaling. Supply a length `2m+2` buffer and a square
+`2m+2` intermediate array to reuse scratch storage. Input and output must
+not alias. The same one-dimensional reference-cell map is used in both axes.
+"""
+function taylor_to_hermite2d!(out, U, Hmat, m, udata, smcofs)
+    for idy = 0:m
+       # First interpolate all y-data at the bottom and top of a cell
+       # to the middle of the bottom and top face.
+       view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,1)
+       view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,1)
+       mul!(view(smcofs,1:2*m+2,1+idy),Hmat,udata)
+       view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,2)
+       view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,2)
+       mul!(view(smcofs,1:2*m+2,m+2+idy),Hmat,udata)
+    end
+    # Then interpolate all data to the middle of the cell
+    for idx = 0:2*m+1
+       view(udata,1:m+1)     .= view(smcofs,1+idx,1:m+1)
+       view(udata,m+2:2*m+2) .= view(smcofs,1+idx,m+2:2*m+2)
+       mul!(view(out,1+idx,1:2*m+2),Hmat,udata)
+    end
+    out
+end
+
 @doc raw"""
     primal2plot2d!(uplot::Array{Float64,2}, up::Array{Float64,4},
                    Hmat::Array{Float64,2}, nref::Int64)
@@ -223,22 +253,7 @@ function primal2plot2d!(uplot::Array{Float64,2},up::Array{Float64,4},Hmat::Array
    for j = 1:ny-1
       for i = 1:nx-1
          U = view(up,1:m+1,1:m+1,i:i+1,j:j+1)
-         for idy = 0:m
-            # First interpolate all y-data at the bottom and top of a cell
-            # to the middle of the bottom and top face.
-            view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,1)
-            view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,1)
-            mul!(view(smcofs,1:2*m+2,1+idy),Hmat,udata)
-            view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,2)
-            view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,2)
-            mul!(view(smcofs,1:2*m+2,m+2+idy),Hmat,udata)
-         end
-         # Then interpolate all data to the middle of the cell
-         for idx = 0:2*m+1
-            view(udata,1:m+1)     .= view(smcofs,1+idx,1:m+1)
-            view(udata,m+2:2*m+2) .= view(smcofs,1+idx,m+2:2*m+2)
-            mul!(view(t,1+idx,1:2*m+2),Hmat,udata)
-         end
+         taylor_to_hermite2d!(t,U,Hmat,m,udata,smcofs)
          # This should be improved ...
          uploc = zeros(nref+1,nref+1)
          for idy = 0:2*m+1
@@ -253,8 +268,15 @@ end
 
 
 export hermitemap!
-export taylor_to_hermite1d!
+export taylor_to_hermite1d!, taylor_to_hermite2d!
 export primal2plot1d!
 export primal2plot2d!
+
+include("wave1d.jl")
+export DissipativeWave1D, initialize_wave!, step_wave!, solve_wave!
+
+include("cns2d.jl")
+export CompressibleNavierStokes2D, initialize_cns!, step_cns!, solve_cns!, cns_timestep
+export cns_worker_timings
 
 end

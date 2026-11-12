@@ -48,6 +48,26 @@ julia> Hmat
 For general `m`, `Hmat` is `(2m+2)×(2m+2)` and carries `m` derivatives at each end;
 see the documentation for `hermitemap!`.
 
+## Dissipative wave examples
+
+`DissipativeWave1D` solves `u_t=v`, `v_t=c^2*u_xx` in one dimension with
+periodic or homogeneous Dirichlet boundaries. It reuses the interpolation
+library and evolves the local polynomials in Julia:
+
+```julia
+s = DissipativeWave1D(3, 40; cfl=0.8)
+initialize_wave!(s, x -> sin(2pi*x), x -> 2pi*cos(2pi*x))
+solve_wave!(s; nsteps=50)
+```
+
+See [Chapter 4 examples](examples/chapter04/README.md) for the unequal displacement
+and velocity orders, Gaussian convergence studies, Fortran comparisons, and
+book figure generation. The same directory's `independent_modes.jl` reproduces
+the book's periodic advection and wave mode checks, exporting figures and measured
+rates from Julia. See its README for the standalone command and numerical tests.
+`step_comparison.jl` in the same directory generates the three panels of Figure
+4.4, including high-precision Hermite evaluation and interpolation diagnostics.
+
 ## Testing
 
 ```bash
@@ -94,9 +114,25 @@ help?> hermitemap!
 
 ## Examples
 
+Book examples in [`examples/chapter04`](examples/chapter04/README.md) include
+wave convergence, independent mode checks, step interpolation, and square-pulse
+comparisons of long-time behavior and convergence. The book's archived plots
+and rates are preserved.
+
 Complete transport solvers in one and two dimensions are in `examples/`. These additionally
 require `Plots`, `TaylorSeries` and `BenchmarkTools`, which are not dependencies of the
 package, and several of them write animated `.gif` output next to the script.
 
 `old_rst_stuff/` holds the methodology write-ups for the original Fortran CHIDES code and
 remains the best reference for the underlying mathematics.
+
+### Periodic compressible Navier–Stokes
+
+`CompressibleNavierStokes2D` implements the planar viscous and heat-conducting
+system from book Section 8.2.1 in `(r,u,v,p)`, with `r=1/rho`. Initialize smooth
+periodic data with `initialize_cns!`, then use `solve_cns!` or `step_cns!`.
+The [Chapter 8 examples](examples/chapter08/README.md) provide a decaying vortex,
+manufactured-solution and entropy-wave checks, a periodic double shear layer,
+dense error measurements, and vorticity/density movies. Reproducible setup/run
+commands accompany the examples. The method uses local Hermite–RK4 evolution
+and constant transport coefficients; it does not include shock or wall models.

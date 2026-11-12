@@ -112,22 +112,7 @@ function p2d_2d!(ud,up,m,nx,ny,nref,Hmat,sim)
 
 end
 
+# Compatibility wrapper around the shared Chides tensor interpolation kernel.
 function t2h_2d!(hip,U,m,Hmat,udata,smcofs)
-
-   @inbounds for idy = 0:m
-      # First interpolate all y-data at the bottom and top of a cell
-      # to the middle of the bottom and top face.
-      view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,1)
-      view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,1)
-      mul!(view(smcofs,1:2*m+2,1+idy),Hmat,udata)
-      view(udata,1:m+1) .= view(U,1:m+1,1+idy,1,2)
-      view(udata,m+2:2*m+2) .= view(U,1:m+1,1+idy,2,2)
-      mul!(view(smcofs,1:2*m+2,m+2+idy),Hmat,udata)
-   end
-   # Then interpolate all data to the middle of the cell
-   @inbounds for idx = 0:2*m+1
-      view(udata,1:m+1)     .= view(smcofs,1+idx,1:m+1)
-      view(udata,m+2:2*m+2) .= view(smcofs,1+idx,m+2:2*m+2)
-      mul!(view(hip,1+idx,1:2*m+2),Hmat,udata)
-   end
+    Chides.taylor_to_hermite2d!(hip,U,Hmat,m,udata,smcofs)
 end
